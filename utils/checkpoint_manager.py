@@ -2,6 +2,7 @@ import os
 import torch
 import logging
 import json
+import time  # Add this import
 
 class CheckpointManager:
     def __init__(self, checkpoint_dir="./checkpoints", auto_save=True):
@@ -30,7 +31,7 @@ class CheckpointManager:
             meta_data = {
                 'last_task': task_id,
                 'total_classes': model._total_classes if hasattr(model, '_total_classes') else 0,
-                'timestamp': torch.tensor(torch.timestamp())
+                'timestamp': time.time()  # Use time.time() instead of torch.timestamp()
             }
             
             with open(meta_path, 'w') as f:
