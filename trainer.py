@@ -41,7 +41,7 @@ def _train(args, start_task=0):
     print_args(args)
     
     # ایجاد مدیر checkpoint
-    checkpoint_dir = args.get("checkpoint_dir", "./checkpoints")
+    checkpoint_dir = args.get("checkpoint_dir", "/content/drive/MyDrive/saved_models/PROOF_Mem_Checkpoints")
     checkpoint_manager = CheckpointManager(checkpoint_dir)
 
     data_manager = DataManager(args["dataset"],args["shuffle"],args["seed"],args["init_cls"],args["increment"], )
