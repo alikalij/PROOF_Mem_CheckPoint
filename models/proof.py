@@ -149,12 +149,12 @@ class Learner(BaseLearner):
             if class_idx < self._network.img_prototypes.shape[0]:
                 self.global_prototypes[class_idx] = self._network.img_prototypes[class_idx].clone()
         
-            self._train_proj(self.train_loader, self.test_loader)
-        
-            # پاکسازی حافظه بعد از هر تسک
-            gc.collect()
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+        self._train_proj(self.train_loader, self.test_loader)
+    
+        # پاکسازی حافظه بعد از هر تسک
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         self.build_rehearsal_memory(data_manager, self.samples_per_class)
         
