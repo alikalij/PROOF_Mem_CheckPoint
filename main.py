@@ -19,10 +19,9 @@ def load_json(settings_path):
 def setup_parser():
     parser = argparse.ArgumentParser(description='Reproduce of multiple continual learning algorthms.')
     parser.add_argument('--config', type=str, default='./exps/test.json', help='Json file of settings.')
-    parser.add_argument('--config', type=str, required=True, help='Path to config file')
     parser.add_argument('--resume', action='store_true', help='Resume from latest checkpoint')
     parser.add_argument('--checkpoint-dir', type=str, default='./checkpoints', help='Checkpoint directory')
-    
+
     return parser
 
 
