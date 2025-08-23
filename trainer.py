@@ -50,15 +50,10 @@ def _train(args, start_task=0):
 
     # بررسی ادامه از checkpoint
     start_task = 0
-    logging.info(f"Resuming from task {args.get("resume", False)}")
     if args.get("resume", False):
-        logging.info(f"2.Resuming from task {args.get("resume", False)}")
         last_task = checkpoint_manager.find_latest_checkpoint()
-        logging.info(f"Resuming from task {last_task}")
-        if last_task is not None:
-            
+        if last_task is not None:            
             success = checkpoint_manager.load_checkpoint(model, last_task, args["device"][0])
-            logging.info(f"Resuming from task {success}")
             if success:
                 start_task = last_task + 1
                 logging.info(f"Resuming from task {start_task}")

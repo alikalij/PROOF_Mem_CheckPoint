@@ -60,7 +60,7 @@ class CheckpointManager:
             return False
     
     def load_checkpoint(self, model, task_id=None, device='cuda'):
-        """بارگذاری checkpoint"""
+        """بارگذاری checkpoint با مدیریت keyهای غیرمنتظره"""
         if task_id is None:
             task_id = self.find_latest_checkpoint()
             if task_id is None:
@@ -73,34 +73,41 @@ class CheckpointManager:
             return None
         
         try:
-            checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
+            checkpoint = torch.load(checkpoint_path, map_location=device)
             
-            # بارگذاری state مدل
-            model._network.load_state_dict(checkpoint['model_state_dict'])
+            # بارگذاری state مدل با ignore unexpected keys
+            model_state_dict = checkpoint['model_state_dict']
+            current_state_dict = model._network.state_dict()
             
-            # بارگذاری stateهای دیگر
+            # 1. فیلتر کردن keyهایی که در مدل فعلی وجود دارند
+            filtered_state_dict = {}
+            for k, v in model_state_dict.items():
+                if k in current_state_dict:
+                    # بررسی compatibility اندازه‌ها
+                    if v.size() == current_state_dict[k].size():
+                        filtered_state_dict[k] = v
+                    else:
+                        logging.warning(f"Size mismatch for parameter {k}: {v.size()} vs {current_state_dict[k].size()}")
+                else:
+                    logging.warning(f"Ignoring unexpected key: {k}")
+            
+            # 2. بارگذاری stateهای فیلتر شده
+            model._network.load_state_dict(filtered_state_dict, strict=False)
+            
+            # 3. بارگذاری stateهای دیگر
             model._known_classes = checkpoint.get('known_classes', 0)
             model._total_classes = checkpoint.get('total_classes', 0)
             model._cur_task = checkpoint.get('cur_task', 0)
             
             if 'global_prototypes' in checkpoint and checkpoint['global_prototypes'] is not None:
-                model.global_prototypes = checkpoint['global_prototypes'].to(device)
+                if hasattr(model, 'global_prototypes'):
+                    model.global_prototypes = checkpoint['global_prototypes'].to(device)
             
-            if 'prototype_memory' in checkpoint:
+            if 'prototype_memory' in checkpoint and hasattr(model, 'prototype_memory'):
                 model.prototype_memory = checkpoint['prototype_memory']
             
-            # بارگذاری optimizer و scheduler
-            if hasattr(model, 'optimizer') and 'optimizer_state_dict' in checkpoint:
-                model.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            
-            if hasattr(model, 'scheduler') and 'scheduler_state_dict' in checkpoint:
-                model.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-            
-            # بارگذاری حافظه replay
-            if hasattr(model, '_memory') and 'memory_data' in checkpoint:
-                model._memory = checkpoint['memory_data']
-            
             logging.info(f"✓ Checkpoint loaded from task {task_id}")
+            logging.info(f"Loaded {len(filtered_state_dict)}/{len(model_state_dict)} parameters")
             return checkpoint
             
         except Exception as e:
