@@ -22,5 +22,5 @@
     "num_workers": 0,
     "proto_update_factor": 0.7,
     "checkpoint_dir": "/content/drive/MyDrive/saved_models/PROOF_Mem_Checkpoints",
-    "resume": false
+    "resume": true
 }
