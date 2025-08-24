@@ -123,56 +123,59 @@ class Learner(BaseLearner):
         self.train_dataset = train_dataset
         self.data_manager = data_manager
         self._network.to(self._device)
-        
+        logging.info(f"log8===========")
         self.train_loader = DataLoader(
             train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=num_workers
         )
+        logging.info(f"log9===========")
         test_dataset = data_manager.get_dataset(
             np.arange(0, self._total_classes), source="test", mode="test"
         )
+        logging.info(f"log10==========="
         self.test_loader = DataLoader(
             test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=num_workers
         )
-
+        logging.info(f"log11===========")
         train_dataset_for_protonet = data_manager.get_dataset(
             np.arange(self._known_classes, self._total_classes), source="train", mode="test"
         )
+        logging.info(f"log12===========")
         self.train_loader_for_protonet = DataLoader(
             train_dataset_for_protonet, batch_size=self.batch_size, shuffle=True, num_workers=num_workers
         )
-
+        logging.info(f"log13===========")
         if len(self._multiple_gpus) > 1:
             self._network = nn.DataParallel(self._network, self._multiple_gpus)
-
+        logging.info(f"log14===========")
         self.cal_prototype(self.train_loader_for_protonet, self._network)
-        
+        logging.info(f"log15===========")
         # Update global prototypes with new knowledge
         for class_idx in range(self._known_classes, self._total_classes):
             if class_idx < self._network.img_prototypes.shape[0]:
                 self.global_prototypes[class_idx] = self._network.img_prototypes[class_idx].clone()
-        
+        logging.info(f"log16===========")
         self._train_proj(self.train_loader, self.test_loader)
-    
+        logging.info(f"log17===========")
         # پاکسازی حافظه بعد از هر تسک
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
         self.build_rehearsal_memory(data_manager, self.samples_per_class)
-        
+        logging.info(f"log18===========")
         if len(self._multiple_gpus) > 1:
             self._network = self._network.module
 
     def _train_proj(self, train_loader, test_loader):
         self._train_transformer = True
         self._network.to(self._device)
-       
+        logging.info(f"log21===========")
         # Freeze appropriate layers
         for name, param in self._network.convnet.named_parameters():
             if 'logit_scale' not in name:
                 param.requires_grad = False
         self._network.freeze_projection_weight_new()
-        
+        logging.info(f"log22===========")
         # Optimizer setup
         if self.args['optimizer'] == 'sgd':
             optimizer = optim.SGD(self._network.parameters(), momentum=0.9, 
@@ -180,16 +183,16 @@ class Learner(BaseLearner):
         elif self.args['optimizer'] == 'adam': 
             optimizer = optim.AdamW(self._network.parameters(), lr=self.init_lr, 
                                    weight_decay=self.weight_decay)
-        
+        logging.info(f"log23===========")
         scheduler = optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=self.args['tuned_epoch'], eta_min=self.min_lr
         )
-
+        logging.info(f"log24===========")
         class_to_label = self.data_manager._class_to_label
         templates = self.data_manager._data_to_prompt[0]
         prog_bar = tqdm(range(self.tuned_epoch))
         cliploss = ClipLoss()
-
+        logging.info(f"log25===========")
         total_labels = class_to_label[:self._total_classes]
         for _, epoch in enumerate(prog_bar):
             self._network.train()
@@ -262,7 +265,7 @@ class Learner(BaseLearner):
                 losses / len(train_loader), train_acc, test_acc
             )
             prog_bar.set_description(info)
-
+        logging.info(f"log29===========")
     def _compute_accuracy(self, model, loader):
         model.eval()
         class_to_label = self.data_manager._class_to_label
