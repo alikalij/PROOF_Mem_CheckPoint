@@ -73,9 +73,9 @@ def _train(args, start_task=0):
                 "Trainable params: {}".format(count_parameters(model._network, True))
             )
             model.incremental_train(data_manager)
-
+            logging.info(f"log1===========")
             cnn_accy, nme_accy, zs_seen, zs_unseen, zs_harmonic, zs_total = model.eval_task()
-
+            logging.info(f"log2===========")
             # ذخیره checkpoint
             metrics = {
                 'accuracy': cnn_accy["top1"],

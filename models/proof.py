@@ -91,16 +91,17 @@ class Learner(BaseLearner):
     def incremental_train(self, data_manager):
         self._cur_task += 1        
         self._total_classes = self._known_classes + data_manager.get_task_size(self._cur_task)
-        
+        logging.info(f"log3===========")
         # به‌روزرسانی پروتوتایپ‌ها در شبکه
         self._network.update_prototype(self._total_classes)
-        
+        logging.info(f"log4===========")
         # مقداردهی اولیه global_prototypes
         if self.global_prototypes is None:
             self.global_prototypes = torch.zeros(
                 (self._total_classes, self.feat_dim),
                 device=self._device
             )
+            logging.info(f"log5===========")
         else:
             current_size = self.global_prototypes.shape[0]
             if current_size < self._total_classes:
@@ -109,8 +110,9 @@ class Learner(BaseLearner):
                     device=self._device
                 )
                 self.global_prototypes = torch.cat([self.global_prototypes, new_prototypes], dim=0)
-
+                logging.info(f"log6===========")
         self._network.update_context_prompt()
+        logging.info(f"log7===========")
         self._network.extend_task()
         
         logging.info("Learning on {}-{}".format(self._known_classes, self._total_classes))
