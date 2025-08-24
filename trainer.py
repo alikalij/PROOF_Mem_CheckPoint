@@ -83,7 +83,8 @@ def _train(args, start_task=0):
                 'total_classes': model._total_classes
             }
             checkpoint_manager.save_checkpoint(model, task, metrics)
-        
+            logging.info(f"Saved task {task}")
+
             model.after_task()
         
             logging.info("CNN: {}".format(cnn_accy["grouped"]))
